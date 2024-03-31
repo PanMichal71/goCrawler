@@ -38,7 +38,7 @@ func (d *DomainRestrictedLinkFilter) isLinkLeadingOutsideDomain(link string) boo
 	host := parsedURL.Host
 
 	// Relative URLs (no host in parsed URL) are considered internal.
-	if host == "" && strings.HasPrefix(link, "/") {
+	if host == "" && (strings.HasPrefix(link, "/") || strings.HasPrefix(link, "./")) {
 		return false
 	}
 
@@ -59,5 +59,15 @@ func (d *DomainRestrictedLinkFilter) isLinkLeadingOutsideDomain(link string) boo
 
 // isLinkLeadingToFragmentIdentifier checks if the link contains a fragment identifier (#).
 func (d *DomainRestrictedLinkFilter) isLinkLeadingToFragmentIdentifier(link string) bool {
-	return strings.Contains(link, "#")
+	if strings.Contains(link, "#") {
+		segments := strings.Split(link, "#")
+		if len(segments) != 2 {
+			// I think I can skip the link that have many segments or can't be split to at least 2
+			return true
+		}
+
+		return !(strings.Contains(segments[0], d.domain) && !strings.HasSuffix(segments[0], d.domain))
+	}
+
+	return false
 }

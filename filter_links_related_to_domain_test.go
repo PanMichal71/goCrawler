@@ -14,8 +14,9 @@ func TestDomainRestrictedLinkFilter(t *testing.T) {
 		expected bool // true if the link is expected to be allowed (not filtered out)
 	}{
 		{"Within domain", "/page", false},
-		{"Within domain", "./about", false},                        // TODO: apparently this is not common
-		{"Within domain", "http://example.com/about#intro", false}, //TODO: should remove the fragment?
+		{"Within domain", "./about", false}, // TODO: apparently this is not common
+		{"Within domain", "http://example.com/about#intro", false},
+		{"Within domain", "http://example.com#intro", true},
 
 		{"Within domain", "http://example.com/page", false},
 		{"Within domain", "http://www.example.com/page", false},
@@ -25,7 +26,7 @@ func TestDomainRestrictedLinkFilter(t *testing.T) {
 		{"Outside domain", "http://anotherdomain.com", true},
 		{"HTTPS within domain", "https://example.com/secure", false},
 		{"Relative path", "/internal/page", false},
-		{"Leading to fragment", "http://example.com/page#section", true},
+		{"Leading to fragment", "http://example.com/page#section", false},
 		{"Mailto link", "mailto:user@example.com", true},
 		{"Telephone link", "tel:+1234567890", true},
 		{"Path outside domain", "http://example.com.redirected.com", true},
