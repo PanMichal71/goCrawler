@@ -12,7 +12,7 @@ type DomainRestrictedLinkFilter struct {
 
 // NewDomainRestrictedLinkFilter creates a new DomainRestrictedLinkFilter with the specified domain.
 func NewDomainRestrictedLinkFilter(domain string) *DomainRestrictedLinkFilter {
-	return &DomainRestrictedLinkFilter{domain: domain}
+	return &DomainRestrictedLinkFilter{domain: normalizeDomain(domain)}
 }
 
 // FilterLink checks if the link leads outside the specified domain or to a fragment identifier.
