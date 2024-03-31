@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// LinkToFileFilter implements the LinkFilter interface to filter links that lead to files.
 type LinkToFileFilter struct{}
 
 // FilterLink checks if the link ends with a common file extension.
@@ -15,32 +14,34 @@ func (l LinkToFileFilter) FilterLink(link string) bool {
 		return false // Unable to parse URL, cannot determine if it points to a file resource.
 	}
 
-	// Check if the path ends with any of the file extensions.
-	for _, ext := range fileExtensions {
-		if strings.HasSuffix(parsedURL.Path, ext) {
-			return true
-		}
-	}
-
-	return false
+	extension := getExtension(parsedURL.Path)
+	_, present := fileExtensions[extension]
+	return present
 }
 
-var fileExtensions = []string{
-	".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".jpg", ".png",
-	".gif", ".zip", ".rar", ".7z", ".mp3", ".mp4", ".avi", ".mov", ".wmv", ".flv",
-	".swf", ".exe", ".msi", ".apk", ".dmg", ".iso", ".torrent", ".jar", ".svg",
-	".eps", ".ai", ".psd", ".ttf", ".otf", ".woff", ".woff2", ".eot", ".ico", ".bmp",
-	".tif", ".tiff", ".svgz", ".webp", ".json", ".xml", ".csv", ".txt", ".rtf",
-	".odt", ".ods", ".odp", ".odg", ".odf", ".epub", ".mobi", ".azw", ".azw3", ".fb2",
-	".djvu", ".djv", ".chm", ".pdb", ".xps", ".cbr", ".cbz", ".cb7", ".cbt", ".cba",
-	".cbw", ".lit", ".prc", ".pdb", ".pml", ".rb", ".c", ".tar", ".gz",
+func getExtension(resourcePath string) string {
+	dotIndex := strings.LastIndex(resourcePath, ".")
+	if dotIndex < 0 || dotIndex == len(resourcePath)-1 {
+		return "" // No extension or resourcePath ends with "."
+	}
+	return resourcePath[dotIndex+1:]
 }
 
-func isKnownExtension(ext string) bool {
-	for _, knownExt := range fileExtensions {
-		if ext == knownExt {
-			return true
-		}
-	}
-	return false
+var fileExtensions = map[string]bool{
+	"pdf": true, "doc": true, "docx": true, "xls": true, "xlsx": true,
+	"ppt": true, "pptx": true, "jpg": true, "png": true,
+	"gif": true, "zip": true, "rar": true, "7z": true, "mp3": true,
+	"mp4": true, "avi": true, "mov": true, "wmv": true, "flv": true,
+	"swf": true, "exe": true, "msi": true, "apk": true, "dmg": true,
+	"iso": true, "torrent": true, "jar": true, "svg": true,
+	"eps": true, "ai": true, "psd": true, "ttf": true, "otf": true,
+	"woff": true, "woff2": true, "eot": true, "ico": true, "bmp": true,
+	"tif": true, "tiff": true, "svgz": true, "webp": true, "json": true,
+	"xml": true, "csv": true, "txt": true, "rtf": true,
+	"odt": true, "ods": true, "odp": true, "odg": true, "odf": true,
+	"epub": true, "mobi": true, "azw": true, "azw3": true, "fb2": true,
+	"djvu": true, "djv": true, "chm": true, "pdb": true, "xps": true,
+	"cbr": true, "cbz": true, "cb7": true, "cbt": true, "cba": true,
+	"cbw": true, "lit": true, "prc": true, "pml": true,
+	"rb": true, "c": true, "tar": true, "gz": true,
 }
