@@ -83,8 +83,13 @@ func (c *Crawler) crawlImpl(url string) {
 	}
 }
 
-func (c *Crawler) fixupLink(link string) string {
-	if strings.HasPrefix(link, "http") {
+func (c *Crawler) fixupDomain(link string) string {
+	if strings.HasPrefix(link, "http://") {
+		// return link
+		return strings.Replace(link, "http://", "https://", 1)
+	}
+
+	if strings.HasPrefix(link, "https://") {
 		return link
 	}
 
@@ -95,8 +100,11 @@ func (c *Crawler) fixupLink(link string) string {
 		res = c.domain + "/" + link
 	}
 
-	newres := strings.TrimSuffix(res, "/")
-	return newres
+	return res
+}
+
+func (c *Crawler) fixupLink(link string) string {
+	return strings.TrimSuffix(c.fixupDomain(link), "/")
 }
 
 func (c *Crawler) processLinks(links map[string]string) {
@@ -119,7 +127,7 @@ func (c *Crawler) processLinks(links map[string]string) {
 			if _, ok := c.crawledLinks[fixedLink]; !ok {
 				found := false
 				for _, l := range c.linksToCrawl {
-					if NormalizeDomain(l) == NormalizeDomain(fixedLink) {
+					if l == fixedLink {
 						found = true
 						break
 					}

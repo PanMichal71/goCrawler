@@ -169,10 +169,14 @@ func TestShouldNotAddLinksAlreadyInQueue(t *testing.T) {
 	webPageMock.On("Load", "https://www.google.com/pomoc").Return(defaultHtmlContent)
 	webPageMock.On("Load", "https://www.google.com/kontakty").Return(defaultHtmlContent)
 	webPageMock.On("GetAllLinks").Return(map[string]string{
-		"https://www.google.com":       "l1",
-		"https://www.google.com/pomoc": "l2",
-		"/kontakty":                    "l3",
-		"http://www.google.com":        "l4",
+		"https://www.google.com":        "l1",
+		"https://www.google.com/pomoc":  "l2",
+		"/kontakty":                     "l3",
+		"http://www.google.com":         "l4",
+		"www.google.com":                "l5",
+		"google.com":                    "l6",
+		"http://www.google.com/":        "l7",
+		"https://www.google.com/pomoc/": "l8",
 	}).Once()
 
 	webPageMock.On("GetAllLinks").Return(map[string]string{

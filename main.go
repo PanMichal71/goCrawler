@@ -8,6 +8,7 @@ import (
 
 func main() {
 	urls := []string{
+		// "https://example.com",
 		"https://centrum.potrafiepomoc.org.pl/",
 		"https://potrafiepomoc.org.pl",
 	}
