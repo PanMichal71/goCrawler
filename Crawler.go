@@ -27,6 +27,15 @@ import (
 // 14. Add possibility to configure the maximum number of links to crawl
 // 15. Add possibility to read robots.txt and respect it
 
+// I could store md5 from previous run and compare it with the current one
+// if they differ I swap them
+// At the same time I keep htmls from previous run and save from current one
+// so I can compare them and see what has changed
+// htmls could be saved in directory tree encompassing the REST paths
+// example.com/ -> index.html
+// example.com/about -> about.html
+// example.com/about/team -> about/team.html
+
 type Crawler struct {
 	webPage      IWebPage
 	db           IDatabase
@@ -141,7 +150,7 @@ func (c *Crawler) Crawl(url string) {
 	c.linkFilters = append(c.linkFilters, NewDomainRestrictedLinkFilter(url))
 	c.linkFilters = append(c.linkFilters, &LinkToFileFilter{})
 
-	fmt.Printf("File: %s\n", c.file.Name())
+	fmt.Printf("File: %s\n", fileName)
 	c.linksToCrawl = append(c.linksToCrawl, url)
 
 	c.crawlImpl(c.domain)
