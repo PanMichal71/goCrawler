@@ -119,7 +119,7 @@ func (c *Crawler) processLinks(links map[string]string) {
 			if _, ok := c.crawledLinks[fixedLink]; !ok {
 				found := false
 				for _, l := range c.linksToCrawl {
-					if l == fixedLink {
+					if NormalizeDomain(l) == NormalizeDomain(fixedLink) {
 						found = true
 						break
 					}
@@ -142,7 +142,7 @@ func getMD5Hash(text string) string {
 }
 
 func (c *Crawler) Crawl(url string) {
-	fileName := fmt.Sprintf("md5-%s-%s.json", normalizeDomain(url), time.Now().Format("2006-01-02:15:04"))
+	fileName := fmt.Sprintf("md5-%s-%s.json", NormalizeDomain(url), time.Now().Format("2006-01-02:15:04"))
 	c.db.Open(fileName)
 	defer c.db.Close()
 

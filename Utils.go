@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"net/url"
+	"strings"
 )
 
-func normalizeDomain(domain string) string {
+func NormalizeDomain(domain string) string {
 	// Parse the URL string
 	parsedUrl, err := url.Parse(domain)
 	if err != nil {
@@ -18,5 +19,5 @@ func normalizeDomain(domain string) string {
 		return domain
 	}
 
-	return parsedUrl.Hostname()
+	return strings.TrimPrefix(parsedUrl.Hostname(), "www.")
 }
