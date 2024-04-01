@@ -14,7 +14,7 @@ import (
 // 1. Add exception handling
 // 2. Add logging
 // 3. Add tests for filters
-// 4. Add database to store page hashes
+// 4. Add Storage to store page hashes
 // 5. Add possibility to interrupt crawling
 // 6. Add possibility to configure ignored files
 // 7. Add possibility to ignore certain paths, e.g. podopieczni
@@ -38,7 +38,7 @@ import (
 
 type Crawler struct {
 	webPage      IWebPage
-	db           IDatabase
+	db           IStorage
 	crawledLinks map[string]bool // using a map for O(1) access
 	linksToCrawl []string
 	domain       string
@@ -48,7 +48,7 @@ type Crawler struct {
 	mutex        sync.Mutex // To safely access linksToCrawl and crawledLinks from multiple goroutines
 }
 
-func NewCrawler(webPage IWebPage, db IDatabase) *Crawler {
+func NewCrawler(webPage IWebPage, db IStorage) *Crawler {
 
 	return &Crawler{
 		webPage:      webPage,

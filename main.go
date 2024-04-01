@@ -25,7 +25,7 @@ func main() {
 
 			fmt.Printf("Crawling: %s\n", url)
 			webPage := NewWebPage(&HTTPFetcher{})
-			fileDb := &FileDatabase{}
+			fileDb := &FileStorage{}
 			crawler := NewCrawler(webPage, fileDb)
 			crawler.Crawl(url) // Crawl the URL.
 			// Adding sleep to avoid hitting the server too hard, adjust as necessary.

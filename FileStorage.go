@@ -5,15 +5,15 @@ import (
 	"os"
 )
 
-// implement the IDatabase interface
-type FileDatabase struct {
+// implement the IStorage interface
+type FileStorage struct {
 	//add filename and file as fields
 	filename string
 	file     *os.File
 }
 
 // Open method which accepts the filename and opens the file
-func (d *FileDatabase) Open(filename string) error {
+func (d *FileStorage) Open(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -23,12 +23,12 @@ func (d *FileDatabase) Open(filename string) error {
 	return nil
 }
 
-func (d *FileDatabase) Close() {
+func (d *FileStorage) Close() {
 	d.file.Close()
 }
 
-// Save method to save the data in the database
-func (d *FileDatabase) Save(url string, md5Hash string) error {
+// Save method to save the data in the Storage
+func (d *FileStorage) Save(url string, md5Hash string) error {
 	jsonString := fmt.Sprintf("{\"url\": \"%s\", \"md5\": \"%s\"}\n", url, md5Hash)
 	d.file.WriteString(jsonString)
 
