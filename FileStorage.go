@@ -8,14 +8,30 @@ import (
 // implement the IStorage interface
 type FileStorage struct {
 	//add filename and file as fields
-	filename string
-	file     *os.File
+	directory string
+	filename  string
+	file      *os.File
 	//number of records written
 	recordsWritten int
 }
 
+// NewFileStorage method to create a new FileStorage object, must accept a directory path as an argument
+func NewFileStorage(directory string) *FileStorage {
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		os.Mkdir(directory, os.ModePerm)
+	}
+
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		panic("Failed to create directory")
+	}
+
+	return &FileStorage{directory: directory}
+}
+
 // Open method which accepts the filename and opens the file
 func (d *FileStorage) Open(filename string) error {
+
+	filename = d.directory + "/" + filename
 	file, err := os.Create(filename)
 	if err != nil {
 		return err

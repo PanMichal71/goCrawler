@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -39,13 +38,12 @@ import (
 type Crawler struct {
 	webPage      IWebPage
 	db           IStorage
-	crawledLinks map[string]bool // using a map for O(1) access
+	crawledLinks map[string]bool
 	linksToCrawl []string
 	domain       string
 	linkFilters  []LinkFilter
 	fileName     string
 	file         *os.File
-	mutex        sync.Mutex // To safely access linksToCrawl and crawledLinks from multiple goroutines
 }
 
 func NewCrawler(webPage IWebPage, db IStorage) *Crawler {
@@ -66,14 +64,11 @@ func (c *Crawler) crawlImpl(url string) {
 	c.crawledLinks[url] = true
 
 	htmlContent := c.webPage.Load(url)
+
 	md5Hash := getMD5Hash(htmlContent)
 	c.db.Save(url, md5Hash)
 
 	links := c.webPage.GetAllLinks()
-
-	// for key := range links {
-	// 	fmt.Println("\tLink: ", key)
-	// }
 
 	c.processLinks(links)
 
@@ -121,7 +116,6 @@ func (c *Crawler) processLinks(links map[string]string) {
 		}
 
 		if shouldCrawl {
-			c.mutex.Lock()
 			fixedLink := c.fixupLink(link)
 
 			if _, ok := c.crawledLinks[fixedLink]; !ok {
@@ -138,8 +132,6 @@ func (c *Crawler) processLinks(links map[string]string) {
 					c.linksToCrawl = append(c.linksToCrawl, fixedLink)
 				}
 			}
-
-			c.mutex.Unlock()
 		}
 	}
 }
@@ -150,7 +142,7 @@ func getMD5Hash(text string) string {
 }
 
 func (c *Crawler) Crawl(url string) {
-	fileName := fmt.Sprintf("md5-%s-%s.json", NormalizeDomain(url), time.Now().Format("2006-01-02:15:04"))
+	fileName := fmt.Sprintf("md5-%s-%s.json", NormalizeDomain(url), time.Now().Format("2006-01-02:15:04:05"))
 	c.db.Open(fileName)
 	defer c.db.Close()
 

@@ -45,7 +45,9 @@ func (m *MockIStorage) Close() {
 func fileNameMatchesPattern() interface{} {
 	return func(fileName string) bool {
 		// Define the regex pattern to match the filename format.
-		regexPattern := `^md5-.+-\d{4}-\d{2}-\d{2}:\d{2}:\d{2}(\-.+)?\.json$`
+		// regexPattern := `^md5-.+-\d{4}-\d{2}-\d{2}:\d{2}:\d{2}(\-.+)?\.json$`
+		regexPattern := `^md5-.+-\d{4}-\d{2}-\d{2}:\d{2}:\d{2}:\d{2}(\-.+)?\.json$`
+
 		matched, err := regexp.MatchString(regexPattern, fileName)
 		if err != nil {
 			return false
