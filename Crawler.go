@@ -13,12 +13,12 @@ import (
 // TODO:
 // 1. Add exception handling
 // 2. Add logging
-// 3. Add tests for filters
-// 4. Add Storage to store page hashes
+// 3. Add tests for filters - DONE
+// 4. Add Storage to store page hashes - DONE
 // 5. Add possibility to interrupt crawling
 // 6. Add possibility to configure ignored files
 // 7. Add possibility to ignore certain paths, e.g. podopieczni
-// 7. some generic mechanism to filter links which is configurable from outside
+// 7. Add some generic mechanism to filter links which is configurable from outside
 // 8. Add possibility to configure the depth of the crawl
 // 9. Add possibility to configure the number of concurrent crawls
 // 10. Add possibility to configure the crawl speed

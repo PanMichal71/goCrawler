@@ -1,23 +1,34 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"os"
 	"sync"
-	"time"
 )
 
 func main() {
-	urls := []string{
-		// "https://example.com",
-		"https://centrum.potrafiepomoc.org.pl/",
-		"https://potrafiepomoc.org.pl",
+	// Define a help flag
+	help := flag.Bool("help", false, "Display this help message")
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [options] <url1> <url2> ...\n", os.Args[0])
+		fmt.Println("Options:")
+		flag.PrintDefaults()
+		fmt.Println("\nArguments:")
+		fmt.Println("  <url1> <url2> ...    List of URLs to crawl")
 	}
+	flag.Parse()
+
+	// Display help message if the help flag is set or no URLs are provided
+	if *help || len(flag.Args()) == 0 {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	urls := flag.Args()
 
 	// Create a wait group to wait for all goroutines to finish
 	var wg sync.WaitGroup
-
-	// Create an instance of the crawler
-	// Note: This example assumes you have a constructor for WebPage that matches your requirements
 
 	for _, url := range urls {
 		wg.Add(1) // Increment the WaitGroup counter.
@@ -29,8 +40,6 @@ func main() {
 			fileDb := &FileStorage{}
 			crawler := NewCrawler(webPage, fileDb)
 			crawler.Crawl(url) // Crawl the URL.
-			// Adding sleep to avoid hitting the server too hard, adjust as necessary.
-			time.Sleep(time.Millisecond * 500)
 		}(url)
 	}
 

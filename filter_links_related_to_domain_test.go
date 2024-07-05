@@ -36,7 +36,7 @@ func TestDomainRestrictedLinkFilter(t *testing.T) {
 		{"Path leading to file", "http://example.com/document.pdf", false},
 		{"External link containing domain", "http://external.com/?ref=example.com", true},
 		{"Subdomain with path", "http://blog.example.com/article", true},
-		{"aaa", "https://example.com/2024/01/04/zglos-sie-do-programu-asystent-osobisty-osoby-z-niepelnosprawnosciami-2024/", false},
+		{"aaa", "https://example.com/2024/01/04/lorem-ipsum-2024/", false},
 	}
 
 	for _, tc := range tests {
@@ -50,7 +50,7 @@ func TestDomainRestrictedLinkFilter(t *testing.T) {
 }
 
 func TestRealDomain(t *testing.T) {
-	domain := "https://potrafiepomoc.org.pl"
+	domain := "https://example.org.pl"
 	filter := NewDomainRestrictedLinkFilter(domain)
 
 	tests := []struct {
@@ -59,9 +59,9 @@ func TestRealDomain(t *testing.T) {
 		expected bool // true if the link is expected to be allowed (not filtered out)
 	}{
 
-		{"aaa", "https://potrafiepomoc.org.pl/2024/01/04/zglos-sie-do-programu-asystent-osobisty-osoby-z-niepelnosprawnosciami-2024/", false},
-		{"aaa", "https://potrafiepomoc.org.pl/2023/11/16/pomoz-dzieciom-zobaczyc-lepszy-swiat-zbiorka-pieniedzy-na-sprzet-okulistyczny/", false},
-		{"aaa", "https://potrafiepomoc.org.pl/pliki-cookies/", false},
+		{"aaa", "https://example.org.pl/2024/01/04/lorem-ipsum-2024/", false},
+		{"aaa", "https://example.org.pl/2023/11/16/lorem-ipsum-ipsum-lorem/", false},
+		{"aaa", "https://example.org.pl/pliki-cookies/", false},
 	}
 
 	for _, tc := range tests {

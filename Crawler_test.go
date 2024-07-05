@@ -143,9 +143,9 @@ func TestShouldFilterOutLinksLeadingOutsideOfDomain(t *testing.T) {
 
 	webPageMock.On("Load", "https://www.google.com").Return(defaultHtmlContent)
 	webPageMock.On("GetAllLinks").Return(map[string]string{
-		"tel:+48509685328":                        "l1",
-		"https://www.google2.com":                 "l2",
-		"mailto:sekretariat@potrafiepomoc.org.pl": "l3",
+		"tel:+48509685328":                  "l1",
+		"https://www.google2.com":           "l2",
+		"mailto:sekretariat@example.org.pl": "l3",
 	}).Once()
 
 	crawler := NewCrawler(webPageMock, storageMock)

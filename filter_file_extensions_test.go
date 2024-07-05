@@ -37,7 +37,7 @@ func TestLinkToFileFilter(t *testing.T) {
 		{"Multiple file extensions", "http://example.com/files/compressed.tar.gz", true},
 		{"Multiple file extensions", "http://example.com/files/compressed.tar.gz.zip", true},
 		{"Multiple file extensions", "http://example.com/files/compressed.tar.gz.zip?action=download", true},
-		{"aaa", "https://example.com/2024/01/04/zglos-sie-do-programu-asystent-osobisty-osoby-z-niepelnosprawnosciami-2024/", false},
+		{"aaa", "https://example.com/2024/01/04/lorem-ipsum-2024/", false},
 	}
 
 	// Run test cases
