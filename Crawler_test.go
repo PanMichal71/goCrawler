@@ -76,7 +76,7 @@ func TestShouldGetHtmlFromGivenUrl(t *testing.T) {
 	webPageMock.On("GetAllLinks").Return(map[string]string{})
 
 	// Execute the method
-	crawler.Crawl("https://www.google.com")
+	crawler.Crawl("https://www.google.com", nil)
 
 	// Assert that the expectations were met
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com")
@@ -103,7 +103,7 @@ func TestShouldOnlyCrawlNotVisitedLinks(t *testing.T) {
 	webPageMock.On("GetAllLinks").Return(map[string]string{}).Maybe()
 
 	crawler := NewCrawler(webPageMock, storageMock)
-	crawler.Crawl("https://www.google.com")
+	crawler.Crawl("https://www.google.com", nil)
 
 	webPageMock.AssertNumberOfCalls(t, "GetAllLinks", 2)
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com/kontakty")
@@ -128,7 +128,7 @@ func TestShouldOnlyCrawlToSameDomain(t *testing.T) {
 	webPageMock.On("GetAllLinks").Return(map[string]string{}).Maybe()
 
 	crawler := NewCrawler(webPageMock, storageMock)
-	crawler.Crawl("https://www.google.com")
+	crawler.Crawl("https://www.google.com", nil)
 
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com/kontakty")
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com")
@@ -151,7 +151,7 @@ func TestShouldFilterOutLinksLeadingOutsideOfDomain(t *testing.T) {
 	}).Once()
 
 	crawler := NewCrawler(webPageMock, storageMock)
-	crawler.Crawl("https://www.google.com")
+	crawler.Crawl("https://www.google.com", nil)
 
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com")
 	webPageMock.AssertNumberOfCalls(t, "Load", 1)
@@ -187,7 +187,7 @@ func TestShouldNotAddLinksAlreadyInQueue(t *testing.T) {
 	webPageMock.On("GetAllLinks").Return(map[string]string{}).Once()
 
 	crawler := NewCrawler(webPageMock, storageMock)
-	crawler.Crawl("https://www.google.com")
+	crawler.Crawl("https://www.google.com", nil)
 
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com")
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com/pomoc")

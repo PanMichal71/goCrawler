@@ -4,27 +4,9 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 )
-
-// TODO:
-// 1. Add exception handling
-// 2. Add logging
-// 3. Add tests for filters - DONE
-// 4. Add Storage to store page hashes - DONE
-// 5. Add possibility to interrupt crawling
-// 6. Add possibility to configure ignored files
-// 7. Add possibility to ignore certain paths, e.g. podopieczni
-// 7. Add some generic mechanism to filter links which is configurable from outside
-// 8. Add possibility to configure the depth of the crawl
-// 9. Add possibility to configure the number of concurrent crawls
-// 10. Add possibility to configure the crawl speed
-// 11. Add possibility to configure the user agent
-// 12. Add possibility to configure the timeout
-// 14. Add possibility to configure the maximum number of links to crawl
-// 15. Add possibility to read robots.txt and respect it
 
 // I could store md5 from previous run and compare it with the current one
 // if they differ I swap them
@@ -40,10 +22,8 @@ type Crawler struct {
 	db           IStorage
 	crawledLinks map[string]bool
 	linksToCrawl []string
-	domain       string
 	linkFilters  []LinkFilter
-	fileName     string
-	file         *os.File
+	domain       string
 }
 
 func NewCrawler(webPage IWebPage, db IStorage) *Crawler {
@@ -55,6 +35,23 @@ func NewCrawler(webPage IWebPage, db IStorage) *Crawler {
 		linksToCrawl: make([]string, 0),
 		linkFilters:  make([]LinkFilter, 0),
 	}
+}
+
+func (c *Crawler) Crawl(url string, ignorePaths []string) {
+	fileName := fmt.Sprintf("md5-%s-%s.json", NormalizeDomain(url), time.Now().Format("2006-01-02:15:04:05"))
+	c.db.Open(fileName)
+	defer c.db.Close()
+
+	c.domain = url
+
+	c.linkFilters = append(c.linkFilters, NewPathExclusionFilter(ignorePaths))
+	c.linkFilters = append(c.linkFilters, NewDomainRestrictedLinkFilter(url))
+	c.linkFilters = append(c.linkFilters, &LinkToFileFilter{})
+
+	fmt.Printf("File: %s\n", fileName)
+	c.linksToCrawl = append(c.linksToCrawl, url)
+
+	c.crawlImpl(c.domain)
 }
 
 func (c *Crawler) crawlImpl(url string) {
@@ -139,19 +136,4 @@ func (c *Crawler) processLinks(links map[string]string) {
 func getMD5Hash(text string) string {
 	hash := md5.Sum([]byte(text))
 	return hex.EncodeToString(hash[:])
-}
-
-func (c *Crawler) Crawl(url string) {
-	fileName := fmt.Sprintf("md5-%s-%s.json", NormalizeDomain(url), time.Now().Format("2006-01-02:15:04:05"))
-	c.db.Open(fileName)
-	defer c.db.Close()
-
-	c.domain = url
-	c.linkFilters = append(c.linkFilters, NewDomainRestrictedLinkFilter(url))
-	c.linkFilters = append(c.linkFilters, &LinkToFileFilter{})
-
-	fmt.Printf("File: %s\n", fileName)
-	c.linksToCrawl = append(c.linksToCrawl, url)
-
-	c.crawlImpl(c.domain)
 }
