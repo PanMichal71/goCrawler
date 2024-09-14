@@ -1,54 +1,38 @@
 package main
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
 )
 
-// I could store md5 from previous run and compare it with the current one
-// if they differ I swap them
-// At the same time I keep htmls from previous run and save from current one
-// so I can compare them and see what has changed
-// htmls could be saved in directory tree encompassing the REST paths
-// example.com/ -> index.html
-// example.com/about -> about.html
-// example.com/about/team -> about/team.html
-
 type Crawler struct {
-	webPage      IWebPage
-	db           IStorage
-	crawledLinks map[string]bool
-	linksToCrawl []string
-	linkFilters  []LinkFilter
-	domain       string
+	webPage        IWebPage
+	contentHandler IContentHandler
+	crawledLinks   map[string]bool
+	linksToCrawl   []string
+	linkFilters    []LinkFilter
+	domain         string
 }
 
-func NewCrawler(webPage IWebPage, db IStorage) *Crawler {
+func NewCrawler(webPage IWebPage, contentHandler IContentHandler) *Crawler {
 
 	return &Crawler{
-		webPage:      webPage,
-		db:           db,
-		crawledLinks: make(map[string]bool),
-		linksToCrawl: make([]string, 0),
-		linkFilters:  make([]LinkFilter, 0),
+		webPage:        webPage,
+		contentHandler: contentHandler,
+		crawledLinks:   make(map[string]bool),
+		linksToCrawl:   make([]string, 0),
+		linkFilters:    make([]LinkFilter, 0),
 	}
 }
 
 func (c *Crawler) Crawl(url string, ignorePaths []string) {
-	fileName := fmt.Sprintf("md5-%s-%s.json", NormalizeDomain(url), time.Now().Format("2006-01-02:15:04:05"))
-	c.db.Open(fileName)
-	defer c.db.Close()
-
 	c.domain = url
 
 	c.linkFilters = append(c.linkFilters, NewPathExclusionFilter(ignorePaths))
 	c.linkFilters = append(c.linkFilters, NewDomainRestrictedLinkFilter(url))
 	c.linkFilters = append(c.linkFilters, &LinkToFileFilter{})
 
-	fmt.Printf("File: %s\n", fileName)
 	c.linksToCrawl = append(c.linksToCrawl, url)
 
 	c.crawlImpl(c.domain)
@@ -62,14 +46,14 @@ func (c *Crawler) crawlImpl(url string) {
 
 	htmlContent := c.webPage.Load(url)
 
-	md5Hash := getMD5Hash(htmlContent)
-	c.db.Save(url, md5Hash)
+	c.contentHandler.HandleContent(url, htmlContent)
 
 	links := c.webPage.GetAllLinks()
 
 	c.processLinks(links)
 
 	if len(c.linksToCrawl) > 0 {
+		// TODO: Move this to separate class so I can mock it in tests
 		time.Sleep(time.Millisecond * time.Duration(10+time.Now().UnixNano()%1000))
 		c.crawlImpl(c.linksToCrawl[len(c.linksToCrawl)-1])
 	}
@@ -131,9 +115,4 @@ func (c *Crawler) processLinks(links map[string]string) {
 			}
 		}
 	}
-}
-
-func getMD5Hash(text string) string {
-	hash := md5.Sum([]byte(text))
-	return hex.EncodeToString(hash[:])
 }

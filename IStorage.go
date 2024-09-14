@@ -1,7 +1,7 @@
 package main
 
 type IStorage interface {
-	Save(url string, hash string) error
+	Write(data []byte) error
 	Open(filename string) error
 	Close()
 }

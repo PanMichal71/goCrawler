@@ -1,18 +1,15 @@
 package main
 
 import (
-	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
 )
 
-// MockIWebPage is a mock type for the IWebPage interface
 type MockIWebPage struct {
 	mock.Mock
 }
 
-// Define methods on the mock that correspond to those of the IWebPage interface
 func (m *MockIWebPage) Load(urlToCrawl string) string {
 	args := m.Called(urlToCrawl)
 	return args.String(0)
@@ -23,74 +20,35 @@ func (m *MockIWebPage) GetAllLinks() map[string]string {
 	return args.Get(0).(map[string]string)
 }
 
-// Mock IStorage
-type MockIStorage struct {
+type MockIContentHandler struct {
 	mock.Mock
 }
 
-func (m *MockIStorage) Save(url string, hash string) error {
-	args := m.Called(url, hash)
-	return args.Error(0)
+func (m *MockIContentHandler) HandleContent(url string, content string) error {
+	m.Called(url, content)
+	return nil
 }
-
-func (m *MockIStorage) Open(filename string) error {
-	args := m.Called(filename)
-	return args.Error(0)
-}
-
-func (m *MockIStorage) Close() {
-	m.Called()
-}
-
-func fileNameMatchesPattern() interface{} {
-	return func(fileName string) bool {
-		// Define the regex pattern to match the filename format.
-		// regexPattern := `^md5-.+-\d{4}-\d{2}-\d{2}:\d{2}:\d{2}(\-.+)?\.json$`
-		regexPattern := `^md5-.+-\d{4}-\d{2}-\d{2}:\d{2}:\d{2}:\d{2}(\-.+)?\.json$`
-
-		matched, err := regexp.MatchString(regexPattern, fileName)
-		if err != nil {
-			return false
-		}
-		return matched
-	}
-}
-
-// define variable for all the tests to store this string: "<html><body><a href=\"https://www.google.com\">Google</a></body></html>"
-var defaultHtmlContent = "<html><body><a href=\"https://www.google.com\">Google</a></body></html>"
-var defaultHtmlContentMd5Hash = "d6165a2f6a47eba8aa611ca6891203a9"
 
 func TestShouldGetHtmlFromGivenUrl(t *testing.T) {
-	// Initialize the mock and the object under test
+	contentHandlerMock := new(MockIContentHandler)
+	contentHandlerMock.On("HandleContent", "https://www.google.com", defaultHtmlContent).Return()
+
 	webPageMock := new(MockIWebPage)
-	storageMock := new(MockIStorage)
-
-	storageMock.On("Open", mock.MatchedBy(fileNameMatchesPattern())).Return(nil)
-	storageMock.On("Save", "https://www.google.com", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Close").Return()
-
-	crawler := NewCrawler(webPageMock, storageMock)
-
 	webPageMock.On("Load", "https://www.google.com").Return(defaultHtmlContent)
-	//expect call for GetAllLinks and it returns empty map
 	webPageMock.On("GetAllLinks").Return(map[string]string{})
 
-	// Execute the method
+	crawler := NewCrawler(webPageMock, contentHandlerMock)
 	crawler.Crawl("https://www.google.com", nil)
 
-	// Assert that the expectations were met
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com")
 }
 
 func TestShouldOnlyCrawlNotVisitedLinks(t *testing.T) {
+	contentHandlerMock := new(MockIContentHandler)
+	contentHandlerMock.On("HandleContent", "https://www.google.com", defaultHtmlContent).Return()
+	contentHandlerMock.On("HandleContent", "https://www.google.com/kontakty", defaultHtmlContent).Return()
+
 	webPageMock := new(MockIWebPage)
-	storageMock := new(MockIStorage)
-
-	storageMock.On("Open", mock.MatchedBy(fileNameMatchesPattern())).Return(nil)
-	storageMock.On("Save", "https://www.google.com", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Save", "https://www.google.com/kontakty", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Close").Return()
-
 	webPageMock.On("Load", "https://www.google.com").Return(defaultHtmlContent)
 	webPageMock.On("Load", "https://www.google.com/kontakty").Return(defaultHtmlContent)
 
@@ -102,7 +60,7 @@ func TestShouldOnlyCrawlNotVisitedLinks(t *testing.T) {
 		"l1": "https://www.google.com"}).Once()
 	webPageMock.On("GetAllLinks").Return(map[string]string{}).Maybe()
 
-	crawler := NewCrawler(webPageMock, storageMock)
+	crawler := NewCrawler(webPageMock, contentHandlerMock)
 	crawler.Crawl("https://www.google.com", nil)
 
 	webPageMock.AssertNumberOfCalls(t, "GetAllLinks", 2)
@@ -110,14 +68,11 @@ func TestShouldOnlyCrawlNotVisitedLinks(t *testing.T) {
 }
 
 func TestShouldOnlyCrawlToSameDomain(t *testing.T) {
+	contentHandlerMock := new(MockIContentHandler)
+	contentHandlerMock.On("HandleContent", "https://www.google.com", defaultHtmlContent).Return()
+	contentHandlerMock.On("HandleContent", "https://www.google.com/kontakty", defaultHtmlContent).Return()
+
 	webPageMock := new(MockIWebPage)
-	storageMock := new(MockIStorage)
-
-	storageMock.On("Open", mock.MatchedBy(fileNameMatchesPattern())).Return(nil)
-	storageMock.On("Save", "https://www.google.com", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Save", "https://www.google.com/kontakty", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Close").Return()
-
 	webPageMock.On("Load", "https://www.google.com").Return(defaultHtmlContent)
 	webPageMock.On("Load", "https://www.google.com/kontakty").Return(defaultHtmlContent)
 
@@ -127,7 +82,7 @@ func TestShouldOnlyCrawlToSameDomain(t *testing.T) {
 	}).Once()
 	webPageMock.On("GetAllLinks").Return(map[string]string{}).Maybe()
 
-	crawler := NewCrawler(webPageMock, storageMock)
+	crawler := NewCrawler(webPageMock, contentHandlerMock)
 	crawler.Crawl("https://www.google.com", nil)
 
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com/kontakty")
@@ -136,13 +91,10 @@ func TestShouldOnlyCrawlToSameDomain(t *testing.T) {
 }
 
 func TestShouldFilterOutLinksLeadingOutsideOfDomain(t *testing.T) {
+	contentHandlerMock := new(MockIContentHandler)
+	contentHandlerMock.On("HandleContent", "https://www.google.com", defaultHtmlContent).Return()
+
 	webPageMock := new(MockIWebPage)
-	storageMock := new(MockIStorage)
-
-	storageMock.On("Open", mock.MatchedBy(fileNameMatchesPattern())).Return(nil)
-	storageMock.On("Save", "https://www.google.com", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Close").Return()
-
 	webPageMock.On("Load", "https://www.google.com").Return(defaultHtmlContent)
 	webPageMock.On("GetAllLinks").Return(map[string]string{
 		"tel:+48509685328":                  "l1",
@@ -150,23 +102,24 @@ func TestShouldFilterOutLinksLeadingOutsideOfDomain(t *testing.T) {
 		"mailto:sekretariat@example.org.pl": "l3",
 	}).Once()
 
-	crawler := NewCrawler(webPageMock, storageMock)
+	crawler := NewCrawler(webPageMock, contentHandlerMock)
 	crawler.Crawl("https://www.google.com", nil)
+
+	contentHandlerMock.AssertNotCalled(t, "HandleContent", "tel:+48509685328", defaultHtmlContent)
+	contentHandlerMock.AssertNotCalled(t, "HandleContent", "https://www.google2.com", defaultHtmlContent)
+	contentHandlerMock.AssertCalled(t, "HandleContent", "https://www.google.com", defaultHtmlContent)
 
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com")
 	webPageMock.AssertNumberOfCalls(t, "Load", 1)
 }
 
 func TestShouldNotAddLinksAlreadyInQueue(t *testing.T) {
+	contentHandlerMock := new(MockIContentHandler)
+	contentHandlerMock.On("HandleContent", "https://www.google.com", defaultHtmlContent).Return()
+	contentHandlerMock.On("HandleContent", "https://www.google.com/pomoc", defaultHtmlContent).Return()
+	contentHandlerMock.On("HandleContent", "https://www.google.com/kontakty", defaultHtmlContent).Return()
+
 	webPageMock := new(MockIWebPage)
-	storageMock := new(MockIStorage)
-
-	storageMock.On("Open", mock.MatchedBy(fileNameMatchesPattern())).Return(nil)
-	storageMock.On("Save", "https://www.google.com", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Save", "https://www.google.com/pomoc", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Save", "https://www.google.com/kontakty", defaultHtmlContentMd5Hash).Return(nil)
-	storageMock.On("Close").Return()
-
 	webPageMock.On("Load", "https://www.google.com").Return(defaultHtmlContent)
 	webPageMock.On("Load", "https://www.google.com/pomoc").Return(defaultHtmlContent)
 	webPageMock.On("Load", "https://www.google.com/kontakty").Return(defaultHtmlContent)
@@ -186,8 +139,13 @@ func TestShouldNotAddLinksAlreadyInQueue(t *testing.T) {
 	}).Once()
 	webPageMock.On("GetAllLinks").Return(map[string]string{}).Once()
 
-	crawler := NewCrawler(webPageMock, storageMock)
+	crawler := NewCrawler(webPageMock, contentHandlerMock)
 	crawler.Crawl("https://www.google.com", nil)
+
+	contentHandlerMock.AssertCalled(t, "HandleContent", "https://www.google.com", defaultHtmlContent)
+	contentHandlerMock.AssertCalled(t, "HandleContent", "https://www.google.com/pomoc", defaultHtmlContent)
+	contentHandlerMock.AssertCalled(t, "HandleContent", "https://www.google.com/kontakty", defaultHtmlContent)
+	contentHandlerMock.AssertNotCalled(t, "HandleContent", "http://www.google.com", defaultHtmlContent)
 
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com")
 	webPageMock.AssertCalled(t, "Load", "https://www.google.com/pomoc")

@@ -1,21 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"strings"
 )
 
-// implement the IStorage interface
 type FileStorage struct {
-	//add filename and file as fields
 	directory string
 	filename  string
 	file      *os.File
-	//number of records written
-	recordsWritten int
 }
 
-// NewFileStorage method to create a new FileStorage object, must accept a directory path as an argument
 func NewFileStorage(directory string) *FileStorage {
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		os.Mkdir(directory, os.ModePerm)
@@ -28,34 +23,37 @@ func NewFileStorage(directory string) *FileStorage {
 	return &FileStorage{directory: directory}
 }
 
-// Open method which accepts the filename and opens the file
 func (d *FileStorage) Open(filename string) error {
 
 	filename = d.directory + "/" + filename
+	// get parent directory of filename
+	parentDir := filename[:len(filename)-len(filename[strings.LastIndex(filename, "/"):])]
+
+	if err := os.MkdirAll(parentDir, os.ModePerm); err != nil {
+		return err
+	}
+
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	d.file = file
 	d.filename = filename
-	d.file.WriteString("[")
-	d.recordsWritten = 0
+
 	return nil
 }
 
 func (d *FileStorage) Close() {
-	d.file.WriteString("]")
 	d.file.Close()
+	d.file = nil
 }
 
-// Save method to save the data in the Storage
-func (d *FileStorage) Save(url string, md5Hash string) error {
-	if d.recordsWritten > 0 {
-		d.file.WriteString(",\n")
+func (d *FileStorage) Write(bytes []byte) error {
+	if d.file == nil {
+		panic("File not open")
 	}
-	d.recordsWritten++
-	jsonString := fmt.Sprintf("{\"url\": \"%s\", \"md5\": \"%s\"}", url, md5Hash)
-	d.file.WriteString(jsonString)
 
-	return nil
+	_, err := d.file.Write(bytes)
+
+	return err
 }

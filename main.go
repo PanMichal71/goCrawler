@@ -31,7 +31,9 @@ func main() {
 	ignorePaths := strings.Split(*ignorePathsArg, ",")
 
 	var wg sync.WaitGroup
-	fileDb := NewFileStorage(*outputDir)
+	fileStorage := NewFileStorage(*outputDir)
+	database := NewInMemoryDatabase()
+	diffTracker := NewDifferenceTracker(database, fileStorage)
 	for _, url := range urls {
 		wg.Add(1)
 		go func(url string) {
@@ -39,7 +41,7 @@ func main() {
 
 			fmt.Printf("Crawling: %s\n", url)
 			webPage := NewWebPage(&HTTPFetcher{})
-			crawler := NewCrawler(webPage, fileDb)
+			crawler := NewCrawler(webPage, diffTracker)
 			crawler.Crawl(url, ignorePaths)
 		}(url)
 	}
