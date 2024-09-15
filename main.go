@@ -32,7 +32,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	fileStorage := NewFileStorage(*outputDir)
-	database := NewInMemoryDatabase()
+	database := NewRemoteDatabase("http://localhost:8080")
 	diffTracker := NewDifferenceTracker(database, fileStorage)
 	for _, url := range urls {
 		wg.Add(1)
