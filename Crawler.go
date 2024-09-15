@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -59,30 +58,6 @@ func (c *Crawler) crawlImpl(url string) {
 	}
 }
 
-func (c *Crawler) fixupDomain(link string) string {
-	if strings.HasPrefix(link, "http://") {
-		// return link
-		return strings.Replace(link, "http://", "https://", 1)
-	}
-
-	if strings.HasPrefix(link, "https://") {
-		return link
-	}
-
-	res := ""
-	if strings.HasPrefix(link, "/") {
-		res = c.domain + link
-	} else {
-		res = c.domain + "/" + link
-	}
-
-	return res
-}
-
-func (c *Crawler) fixupLink(link string) string {
-	return strings.TrimSuffix(c.fixupDomain(link), "/")
-}
-
 func (c *Crawler) processLinks(links map[string]string) {
 	for link := range links {
 		shouldCrawl := true
@@ -96,23 +71,26 @@ func (c *Crawler) processLinks(links map[string]string) {
 			}
 		}
 
-		if shouldCrawl {
-			fixedLink := c.fixupLink(link)
+		if !shouldCrawl {
+			continue
+		}
 
-			if _, ok := c.crawledLinks[fixedLink]; !ok {
-				found := false
-				for _, l := range c.linksToCrawl {
-					if l == fixedLink {
-						found = true
-						break
-					}
-				}
+		fixedLink := FixupLink(c.domain, link)
 
-				if !found {
-					fmt.Printf("Adding link to crawl: %s\n", fixedLink)
-					c.linksToCrawl = append(c.linksToCrawl, fixedLink)
+		if _, ok := c.crawledLinks[fixedLink]; !ok {
+			found := false
+			for _, l := range c.linksToCrawl {
+				if l == fixedLink {
+					found = true
+					break
 				}
 			}
+
+			if !found {
+				fmt.Printf("Adding link to crawl: %s\n", fixedLink)
+				c.linksToCrawl = append(c.linksToCrawl, fixedLink)
+			}
 		}
+
 	}
 }
